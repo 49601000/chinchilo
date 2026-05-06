@@ -2,7 +2,16 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:transparent}
+html,body{height:100%}
+body{
+  background:transparent;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:14px;
+  touch-action:manipulation;
+  -webkit-text-size-adjust:100%;
+}
 #game{
   font-family:'Noto Sans JP',sans-serif;
   background:linear-gradient(160deg,#0d0d1a 0%,#1a1208 50%,#0d0d1a 100%);
@@ -10,6 +19,8 @@ body{background:transparent}
   border:1px solid rgba(243,156,18,0.3);
   position:relative;color:#f0e6c8;
   display:flex;flex-direction:column;
+  width:min(100%,520px);
+  max-height:calc(100dvh - 28px);
 }
 .title-bar{
   width:100%;padding:14px 24px 10px;
@@ -93,6 +104,37 @@ body{background:transparent}
 #nextBtn{display:none;padding:10px 26px;border-radius:8px;cursor:pointer;background:transparent;border:1px solid rgba(240,230,200,.3);color:rgba(240,230,200,.55);font-family:'Noto Sans JP',sans-serif;font-size:12px;letter-spacing:2px;transition:all .2s;flex-shrink:0;}
 #nextBtn.show{display:block}
 #nextBtn:hover{border-color:rgba(243,156,18,.5);color:#f39c12}
+
+@media (max-width: 768px){
+  body{padding:0}
+  #game{
+    width:100vw;
+    min-height:100dvh;
+    max-height:none;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+  }
+  .title-bar{padding:12px 16px 9px}
+  .title-main{font-size:16px;letter-spacing:2px}
+  .turn-counter{font-size:14px}
+  #main{padding:12px 12px 10px;gap:10px}
+  .bowl-svg{width:156px;height:94px}
+  .die{width:52px;height:52px;font-size:24px}
+  .shonben-wrap,.status-bar,.result-panel{max-width:100%}
+  #flickZone{min-height:110px}
+  #riskyBtn{bottom:12px;right:12px;padding:8px 10px;font-size:10px;letter-spacing:1px}
+  .fate-text{font-size:26px;letter-spacing:3px}
+}
+
+@media (min-width: 1024px){
+  body{padding:24px}
+  #game{width:520px;min-height:640px}
+  #main{padding:20px 26px 16px;gap:14px}
+  .bowl-svg{width:196px;height:118px}
+  .die{width:62px;height:62px;font-size:28px}
+  .flick-hint{font-size:12px}
+}
 </style>
 
 <div id="game">
@@ -148,6 +190,7 @@ body{background:transparent}
 <script>
 const ZONE_L=33,ZONE_R=67;
 let turn=1,riskyUsed=false,riskyResult=null,flickPhase='idle',fStart=null,trails=[],rollTimer=null;
+let lastTouchEnd=0;
 
 function resetDice(){for(let i=0;i<3;i++){const d=document.getElementById('d'+i);d.textContent='?';d.className='die';d.style.cssText='';}}
 function setTurnUI(){const tc=document.getElementById('turnCounter');tc.textContent=turn+'/3';tc.className='turn-counter active';setTimeout(()=>tc.className='turn-counter',800);}
@@ -341,5 +384,30 @@ function daikyoAbsorb(){
   },100);
 }
 
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTouchEnd<=300)e.preventDefault();
+  lastTouchEnd=now;
+},{passive:false});
+
+function disablePinchZoom(){
+  const hasViewport=[...document.getElementsByTagName('meta')].some(m=>m.name==='viewport');
+  if(!hasViewport&&document.head){
+    const meta=document.createElement('meta');
+    meta.name='viewport';
+    meta.content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+    document.head.appendChild(meta);
+  }
+
+  document.addEventListener('touchmove',e=>{
+    if(e.touches&&e.touches.length>1)e.preventDefault();
+  },{passive:false});
+
+  ['gesturestart','gesturechange','gestureend'].forEach(evt=>{
+    document.addEventListener(evt,e=>e.preventDefault(),{passive:false});
+  });
+}
+
+disablePinchZoom();
 setTurnUI();
 </script>
