@@ -1,0 +1,345 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent}
+#game{
+  font-family:'Noto Sans JP',sans-serif;
+  background:linear-gradient(160deg,#0d0d1a 0%,#1a1208 50%,#0d0d1a 100%);
+  min-height:580px;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(243,156,18,0.3);
+  position:relative;color:#f0e6c8;
+  display:flex;flex-direction:column;
+}
+.title-bar{
+  width:100%;padding:14px 24px 10px;
+  border-bottom:1px solid rgba(243,156,18,0.2);
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:2;flex-shrink:0;
+}
+.title-main{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:#f39c12;letter-spacing:3px;text-shadow:0 0 16px rgba(243,156,18,0.7);}
+.turn-counter{font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;color:rgba(240,230,200,0.4);letter-spacing:2px;transition:color .3s,text-shadow .3s;}
+.turn-counter.active{color:#f39c12;text-shadow:0 0 10px rgba(243,156,18,0.7)}
+#main{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 20px 12px;gap:12px;position:relative;z-index:1;min-height:0;}
+.bowl-wrap{flex-shrink:0}
+.bowl-svg{width:180px;height:108px}
+.dice-row{display:flex;gap:12px;justify-content:center;flex-shrink:0;}
+.die{
+  width:58px;height:58px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:900;font-family:'Oswald',sans-serif;
+  background:linear-gradient(135deg,#fdfcf8 0%,#ece8d8 100%);
+  border:2px solid #c8b87a;color:#1a1a2e;
+  box-shadow:0 4px 14px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.8);
+  position:relative;overflow:hidden;
+}
+.die.rolling{animation:dieRoll .08s ease-in-out infinite}
+.die.red{
+  background:linear-gradient(135deg,#6b0000 0%,#b02020 50%,#6b0000 100%);
+  border-color:#e05050;color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,0.6),0 0 22px rgba(200,50,50,0.8),inset 0 1px 0 rgba(255,100,100,0.4);
+}
+.die.red::after{content:'';position:absolute;inset:0;animation:pulse .9s ease-in-out infinite;background:radial-gradient(circle at center,rgba(255,80,80,0.35),transparent 70%);}
+.die.curse{background:linear-gradient(135deg,#0e0e3a 0%,#1e1e7a 50%,#0e0e3a 100%);border-color:#5060d0;color:#8899ff;box-shadow:0 4px 14px rgba(0,0,0,0.6),0 0 18px rgba(80,100,220,0.6);}
+@keyframes dieRoll{0%{transform:rotate(-7deg)scale(1.06)}50%{transform:rotate(7deg)scale(0.94)}100%{transform:rotate(-7deg)scale(1.06)}}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bigReveal{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes screenShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.shonben-wrap{width:100%;max-width:340px;flex-shrink:0}
+.shonben-track{width:100%;height:10px;border-radius:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08);position:relative;overflow:visible;}
+.shonben-zone{position:absolute;top:0;height:100%;border-radius:5px;background:rgba(39,174,96,.35);border:1px solid rgba(39,174,96,.55);left:33%;width:34%;}
+.shonben-marker{position:absolute;top:-5px;width:20px;height:20px;border-radius:50%;background:#f39c12;border:2px solid #fff;transform:translateX(-50%);left:50%;box-shadow:0 0 8px rgba(243,156,18,.8);transition:left .04s linear;}
+.shonben-label{font-size:10px;color:rgba(240,230,200,.45);letter-spacing:1.5px;text-align:center;margin-top:5px}
+.status-bar{font-size:13px;color:rgba(240,230,200,.7);text-align:center;letter-spacing:1px;line-height:1.55;min-height:38px;flex-shrink:0;width:100%;max-width:340px;}
+.status-bar.hi{color:#f39c12;font-weight:700;font-size:14px}
+.status-bar.ng{color:#e74c3c;font-weight:700;text-shadow:0 0 10px rgba(192,57,43,.8)}
+.status-bar.ok{color:#2ecc71;font-weight:700;text-shadow:0 0 10px rgba(39,174,96,.7)}
+.result-panel{width:100%;max-width:340px;border-radius:12px;padding:16px 20px;border:1.5px solid;text-align:center;flex-shrink:0;animation:fadeIn .35s ease;display:none;}
+.result-panel.show{display:block}
+.result-panel.win{background:rgba(39,174,96,.1);border-color:rgba(39,174,96,.5)}
+.result-panel.lose{background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.5)}
+.result-panel.neutral{background:rgba(243,156,18,.07);border-color:rgba(243,156,18,.35)}
+.res-emoji{font-size:34px;animation:bigReveal .45s ease}
+.res-role{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;margin:6px 0 3px;letter-spacing:3px}
+.result-panel.win .res-role{color:#2ecc71;text-shadow:0 0 12px rgba(39,174,96,.8)}
+.result-panel.lose .res-role{color:#e74c3c;text-shadow:0 0 12px rgba(192,57,43,.8)}
+.result-panel.neutral .res-role{color:#f39c12;text-shadow:0 0 12px rgba(243,156,18,.8)}
+.res-desc{font-size:11px;color:rgba(240,230,200,.55);letter-spacing:1px}
+.res-dice{display:flex;gap:9px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.res-die{width:44px;height:44px;border-radius:8px;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;}
+.res-die.high{background:rgba(192,57,43,.2);border:1.5px solid #e74c3c;color:#e74c3c;box-shadow:0 0 8px rgba(192,57,43,.4)}
+.res-die.low{background:rgba(30,30,120,.25);border:1.5px solid #5b7bd5;color:#8899ff}
+.res-die.mid{background:rgba(0,0,0,.3);border:1.5px solid rgba(240,230,200,.2);color:#f0e6c8}
+#flickZone{width:100%;flex:1;min-height:90px;border-radius:10px;background:rgba(0,0,0,.35);border:1.5px dashed rgba(243,156,18,.25);position:relative;overflow:hidden;cursor:pointer;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;}
+#flickZone.active{border-color:rgba(243,156,18,.65);background:rgba(243,156,18,.04)}
+#flickZone.disabled{opacity:.35;cursor:default;pointer-events:none}
+.flick-hint{font-size:11px;color:rgba(240,230,200,.4);letter-spacing:2.5px;pointer-events:none}
+.trail-dot{position:absolute;border-radius:50%;background:rgba(243,156,18,.55);pointer-events:none;transform:translate(-50%,-50%);}
+.flick-vel-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:80px;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;}
+.flick-vel-fill{height:100%;border-radius:2px;background:#f39c12;width:0%;transition:width .05s}
+#riskyBtn{
+  position:absolute;bottom:18px;right:18px;z-index:5;
+  padding:9px 14px;border-radius:8px;cursor:pointer;
+  background:transparent;border:1.5px solid rgba(255,255,255,0.6);
+  color:#ffffff;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;transition:all .2s;white-space:nowrap;
+}
+#riskyBtn:hover{background:rgba(255,255,255,0.08);border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,0.2)}
+#riskyBtn.used{opacity:.25;pointer-events:none}
+#fateBanner{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.88);z-index:20;border-radius:16px;flex-direction:column;gap:10px;}
+.fate-text{font-family:'Oswald',sans-serif;font-size:30px;font-weight:700;letter-spacing:4px;animation:bigReveal .4s ease}
+.fate-sub{font-size:12px;letter-spacing:2px;color:rgba(240,230,200,.65)}
+#nextBtn{display:none;padding:10px 26px;border-radius:8px;cursor:pointer;background:transparent;border:1px solid rgba(240,230,200,.3);color:rgba(240,230,200,.55);font-family:'Noto Sans JP',sans-serif;font-size:12px;letter-spacing:2px;transition:all .2s;flex-shrink:0;}
+#nextBtn.show{display:block}
+#nextBtn:hover{border-color:rgba(243,156,18,.5);color:#f39c12}
+</style>
+
+<div id="game">
+  <div class="title-bar">
+    <div class="title-main">チンチロリン</div>
+    <div class="turn-counter" id="turnCounter">1/3</div>
+  </div>
+  <div id="main">
+    <div class="bowl-wrap">
+      <svg class="bowl-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bg1" cx="50%" cy="60%" r="60%"><stop offset="0%" stop-color="#5a3e1b"/><stop offset="100%" stop-color="#2c1f0a"/></radialGradient>
+          <radialGradient id="ig1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#3d2b0e"/><stop offset="100%" stop-color="#1a1005"/></radialGradient>
+        </defs>
+        <path d="M12 56 Q12 112 100 112 Q188 112 188 56 Q168 30 100 28 Q32 30 12 56Z" fill="url(#bg1)"/>
+        <ellipse cx="100" cy="56" rx="88" ry="27" fill="url(#ig1)" stroke="#7a5c2a" stroke-width="1.5"/>
+        <ellipse cx="100" cy="53" rx="58" ry="17" fill="#150d03" opacity=".55"/>
+        <text x="100" y="59" text-anchor="middle" font-size="10" fill="rgba(200,160,80,.3)" font-family="serif" letter-spacing="4">茶碗</text>
+      </svg>
+    </div>
+    <div class="dice-row">
+      <div class="die" id="d0">?</div>
+      <div class="die" id="d1">?</div>
+      <div class="die" id="d2">?</div>
+    </div>
+    <div class="shonben-wrap">
+      <div class="shonben-track">
+        <div class="shonben-zone"></div>
+        <div class="shonben-marker" id="sbMarker"></div>
+      </div>
+      <div class="shonben-label" id="sbLabel">緑ゾーンを狙ってフリック（下→上）</div>
+    </div>
+    <div class="status-bar" id="statusBar">サイコロを下からフリックせよ！</div>
+    <div class="result-panel" id="resultPanel">
+      <div class="res-emoji" id="resEmoji"></div>
+      <div class="res-role" id="resRole"></div>
+      <div class="res-desc" id="resDesc"></div>
+      <div class="res-dice" id="resDice"></div>
+    </div>
+    <button id="nextBtn" onclick="nextTurn()">もう一度振る</button>
+    <div id="flickZone" onmousedown="startFlick(event)" ontouchstart="startFlick(event)">
+      <span class="flick-hint">↑ 下からフリック ↑</span>
+      <div class="flick-vel-bar"><div class="flick-vel-fill" id="velFill"></div></div>
+    </div>
+  </div>
+  <button id="riskyBtn" onclick="activateRisky()">＜＜ リスキーダイス発動 ＞＞</button>
+  <div id="fateBanner" style="display:none">
+    <div class="fate-text" id="fateText"></div>
+    <div class="fate-sub" id="fateSub"></div>
+  </div>
+</div>
+
+<script>
+const ZONE_L=33,ZONE_R=67;
+let turn=1,riskyUsed=false,riskyResult=null,flickPhase='idle',fStart=null,trails=[],rollTimer=null;
+
+function resetDice(){for(let i=0;i<3;i++){const d=document.getElementById('d'+i);d.textContent='?';d.className='die';d.style.cssText='';}}
+function setTurnUI(){const tc=document.getElementById('turnCounter');tc.textContent=turn+'/3';tc.className='turn-counter active';setTimeout(()=>tc.className='turn-counter',800);}
+function setStatus(t,cls=''){const el=document.getElementById('statusBar');el.textContent=t;el.className='status-bar'+(cls?' '+cls:'');}
+
+function startFlick(e){
+  if(flickPhase!=='idle')return;
+  e.preventDefault();
+  const z=document.getElementById('flickZone');z.classList.add('active');
+  const r=z.getBoundingClientRect();
+  const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;
+  fStart={x:cx,y:cy,t:Date.now(),rect:r};flickPhase='dragging';trails=[];addTrail(cx-r.left,cy-r.top,14);
+  const mm=ev=>moveFlick(ev),mu=ev=>endFlick(ev);
+  fStart._mm=mm;fStart._mu=mu;
+  window.addEventListener('mousemove',mm);window.addEventListener('touchmove',mm,{passive:false});
+  window.addEventListener('mouseup',mu);window.addEventListener('touchend',mu);
+}
+function moveFlick(e){
+  if(flickPhase!=='dragging'||!fStart)return;
+  e.preventDefault();
+  const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;
+  const r=fStart.rect;
+  const pct=Math.max(0,Math.min(100,(cx-r.left)/r.width*100));
+  document.getElementById('sbMarker').style.left=pct+'%';
+  const dy=fStart.y-cy,dt=(Date.now()-fStart.t)||1,spd=Math.min(100,Math.max(0,dy/dt*120));
+  document.getElementById('velFill').style.width=spd+'%';
+  addTrail(cx-r.left,cy-r.top,Math.min(18,6+spd*0.15));
+}
+function endFlick(e){
+  if(!fStart)return;
+  window.removeEventListener('mousemove',fStart._mm);window.removeEventListener('touchmove',fStart._mm);
+  window.removeEventListener('mouseup',fStart._mu);window.removeEventListener('touchend',fStart._mu);
+  const z=document.getElementById('flickZone');z.classList.remove('active');
+  document.getElementById('velFill').style.width='0%';
+  const cx=e.changedTouches?e.changedTouches[0].clientX:e.clientX,cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
+  const r=fStart.rect,pct=(cx-r.left)/r.width*100,dyPx=fStart.y-cy,dt=(Date.now()-fStart.t)||1,speed=dyPx/dt*100;
+  fStart=null;clearTrails();flickPhase='rolling';
+  if(riskyResult==='daikyo'){daikyoAbsorb();return;}
+  const inZone=pct>=ZONE_L&&pct<=ZONE_R,upward=speed>4;
+  if(!upward||!inZone){
+    document.getElementById('sbLabel').textContent='着弾:'+pct.toFixed(0)+'% '+(inZone?'ゾーンOK':'ゾーン外')+'・'+(upward?'↑OK':'↑弱！');
+    setStatus('💨 ションベン！場外や…','ng');showShonben();return;
+  }
+  document.getElementById('sbLabel').textContent='着弾:'+pct.toFixed(0)+'% ← ナイスフリック！';
+  setStatus('👊 茶碗イン！ロール中…','hi');
+  z.classList.add('disabled');rollDice();
+}
+function addTrail(x,y,size){
+  const z=document.getElementById('flickZone'),dot=document.createElement('div');
+  dot.className='trail-dot';dot.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;opacity:.6;`;
+  z.appendChild(dot);trails.push(dot);if(trails.length>18)z.removeChild(trails.shift());
+}
+function clearTrails(){const z=document.getElementById('flickZone');trails.forEach(d=>{try{z.removeChild(d)}catch(e){}});trails=[];}
+
+function rollDice(){
+  for(let i=0;i<3;i++)document.getElementById('d'+i).classList.add('rolling');
+  let t=0;
+  rollTimer=setInterval(()=>{
+    for(let i=0;i<3;i++)document.getElementById('d'+i).textContent=riskyResult==='daikichi'?[4,5,6][Math.floor(Math.random()*3)]:Math.ceil(Math.random()*6);
+    if(++t>22){
+      clearInterval(rollTimer);
+      const res=riskyResult==='daikichi'?Array.from({length:3},()=>[4,5,6][Math.floor(Math.random()*3)]):Array.from({length:3},()=>Math.ceil(Math.random()*6));
+      for(let i=0;i<3;i++){document.getElementById('d'+i).classList.remove('rolling');document.getElementById('d'+i).textContent=res[i];}
+      setTimeout(()=>judgeAndShow(res),350);
+    }
+  },75);
+}
+
+function judgeRole(nums){
+  const s=[...nums].sort((a,b)=>a-b),[a,b,c]=s;
+  if(a===b&&b===c){if(a===1)return{name:'ピンゾロ',rank:100,type:'win',emoji:'👑',desc:'最強のゾロ目！',settled:true};return{name:`${a}のゾロ目`,rank:90+a,type:'win',emoji:'✨',desc:'ゾロ目！強い！',settled:true};}
+  if(a===4&&b===5&&c===6)return{name:'シゴロ',rank:95,type:'win',emoji:'🎯',desc:'456！',settled:true};
+  if(a===1&&b===2&&c===3)return{name:'ヒフミ',rank:-1,type:'lose',emoji:'💀',desc:'123…倍押し…',settled:true};
+  if(b===c)return{name:`目は${a}`,rank:50+c,type:'neutral',emoji:'🎲',desc:`${c}のゾロ・目は${a}`,settled:true};
+  if(a===b)return{name:`目は${c}`,rank:50+a,type:'neutral',emoji:'🎲',desc:`${a}のゾロ・目は${c}`,settled:true};
+  return{name:'目なし',rank:0,type:'neutral',emoji:'💨',desc:'役なし…もう一丁いく？',settled:false};
+}
+function judgeAndShow(nums){
+  const role=judgeRole(nums);flickPhase='done';
+  const panel=document.getElementById('resultPanel');
+  document.getElementById('resEmoji').textContent=role.emoji;
+  document.getElementById('resRole').textContent=role.name;
+  document.getElementById('resDesc').textContent=role.desc;
+  const dc=document.getElementById('resDice');dc.innerHTML='';
+  nums.forEach(n=>{const el=document.createElement('div');el.className='res-die '+(n>=4?'high':n<=2?'low':'mid');el.textContent=n;dc.appendChild(el);});
+  panel.className='result-panel show '+role.type;
+  if(role.type==='win')setStatus('🎉 '+role.name+'！勝ち！','ok');
+  else if(role.type==='lose')setStatus('😭 '+role.name+'…負け…','ng');
+  else setStatus(role.desc,'hi');
+  if(role.settled){showEndState();}
+  else if(turn>=3){setStatus(role.desc+' ─ 3回目終了','hi');showEndState();}
+  else{document.getElementById('nextBtn').classList.add('show');document.getElementById('nextBtn').textContent='もう一度振る（'+turn+'/3回目完了）';}
+}
+function showEndState(){
+  document.getElementById('nextBtn').classList.add('show');
+  document.getElementById('nextBtn').textContent='最初からやり直す';
+  document.getElementById('nextBtn').onclick=resetAll;
+  document.getElementById('flickZone').classList.add('disabled');
+  document.getElementById('riskyBtn').classList.add('used');
+}
+function showShonben(){
+  const panel=document.getElementById('resultPanel');
+  document.getElementById('resEmoji').textContent='🚿';document.getElementById('resRole').textContent='ションベン';
+  document.getElementById('resDesc').textContent='場外！もう一度フリックせよ';document.getElementById('resDice').innerHTML='';
+  panel.className='result-panel show lose';flickPhase='done';
+  if(turn>=3){showEndState();}
+  else{document.getElementById('nextBtn').classList.add('show');document.getElementById('nextBtn').textContent='もう一度振る（'+turn+'/3回目完了）';document.getElementById('nextBtn').onclick=nextTurn;}
+}
+function nextTurn(){
+  if(turn>=3){resetAll();return;}
+  turn++;setTurnUI();resetDice();flickPhase='idle';
+  document.getElementById('resultPanel').className='result-panel';
+  document.getElementById('nextBtn').classList.remove('show');document.getElementById('nextBtn').onclick=nextTurn;
+  document.getElementById('flickZone').classList.remove('disabled');
+  document.getElementById('sbLabel').textContent='緑ゾーンを狙ってフリック（下→上）';
+  document.getElementById('sbMarker').style.left='50%';
+  setStatus('サイコロを下からフリックせよ！');
+}
+function resetAll(){
+  turn=1;riskyUsed=false;riskyResult=null;flickPhase='idle';
+  setTurnUI();resetDice();
+  document.getElementById('resultPanel').className='result-panel';
+  document.getElementById('nextBtn').classList.remove('show');document.getElementById('nextBtn').onclick=nextTurn;
+  document.getElementById('flickZone').classList.remove('disabled');
+  document.getElementById('riskyBtn').classList.remove('used');
+  document.getElementById('sbLabel').textContent='緑ゾーンを狙ってフリック（下→上）';
+  document.getElementById('sbMarker').style.left='50%';
+  document.getElementById('velFill').style.width='0%';
+  setStatus('サイコロを下からフリックせよ！');clearTrails();
+}
+
+function activateRisky(){
+  if(riskyUsed||flickPhase==='rolling')return;
+  riskyUsed=true;
+  document.getElementById('riskyBtn').classList.add('used');
+
+  const roll20=Math.floor(Math.random()*20)+1;
+  riskyResult=roll20===20?'daikyo':'daikichi';
+
+  const banner=document.getElementById('fateBanner');
+  banner.style.display='flex';
+
+  const ft=document.getElementById('fateText'),fs=document.getElementById('fateSub');
+
+  ft.style.color='#f39c12';
+  ft.textContent='判定中…';
+  fs.textContent='';
+
+  let cnt=0;
+  const t=setInterval(()=>{
+    ft.textContent = Math.random() < 0.5 ? '【 大 吉 】' : '【 大 凶 】';
+    ft.style.color = ft.textContent.includes('大 凶') ? '#e74c3c' : '#f39c12';
+
+    if(++cnt>18){
+      clearInterval(t);
+      setTimeout(()=>{
+        if(riskyResult==='daikyo'){
+          ft.style.color='#e74c3c';
+          ft.textContent='【 大 凶 】';
+          fs.textContent='';
+        } else {
+          ft.style.color='#f39c12';
+          ft.textContent='【 大 吉 】';
+          fs.textContent='';
+        }
+
+        setTimeout(()=>{
+          banner.style.display='none';
+        },2200);
+      },600);
+    }
+  },60);
+}
+
+function daikyoAbsorb(){
+  setStatus('😈 逃げ場はない…茶碗に全てが吸い込まれる','ng');
+  const dice=[0,1,2].map(i=>document.getElementById('d'+i));
+  dice.forEach(d=>{const sx=(Math.random()-.5)*160,sy=(Math.random()-.5)*80,sr=(Math.random()*360)+'deg';d.style.transform=`translate(${sx}px,${sy}px) rotate(${sr})`;d.style.transition='none';d.textContent='?';});
+  setTimeout(()=>{
+    dice.forEach(d=>{d.style.transition='transform 1.3s cubic-bezier(0.36,0,0.66,-0.56)';d.style.transform='translate(0,0) rotate(0deg)';});
+    setTimeout(()=>{const g=document.getElementById('game');g.style.animation='screenShake .4s ease';g.addEventListener('animationend',()=>g.style.animation='',{once:true});},1000);
+    setTimeout(()=>{
+      dice.forEach((d,i)=>{d.style.transition='';d.style.transform='';d.textContent=[1,2,3][i];d.className='die';});
+      setStatus('💀 ヒフミ確定！倍押しで即退場や…','ng');flickPhase='done';
+      document.getElementById('resEmoji').textContent='💀';document.getElementById('resRole').textContent='ヒフミ（確定）';
+      document.getElementById('resDesc').textContent='大凶：逃げ場なし。倍押しで即退場や。';
+      const dc=document.getElementById('resDice');dc.innerHTML='';
+      [1,2,3].forEach(n=>{const el=document.createElement('div');el.className='res-die low';el.textContent=n;dc.appendChild(el);});
+      document.getElementById('resultPanel').className='result-panel show lose';showEndState();
+    },1400);
+  },100);
+}
+
+setTurnUI();
+</script>
